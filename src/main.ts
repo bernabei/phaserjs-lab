@@ -1,59 +1,50 @@
-import './style.css'
-import { Scene, Game, WEBGL, GameObjects } from 'phaser';
+import { Game, Types } from 'phaser';
+import { LoadingScene } from './scenes';
 
-const canvas = document.getElementById('game') as HTMLCanvasElement;
-
-class GameScene extends Scene {
-  private textbox: GameObjects.Text | undefined;
-
-  constructor() {
-    super('scene-game');
-  }
-
-  preload() {
-    this.load.setBaseURL('http://labs.phaser.io');
-
-    this.load.image('sky', 'assets/skies/space3.png');
-    this.load.image('logo', 'assets/sprites/phaser3-logo.png');
-    this.load.image('red', 'assets/particles/red.png');
-  }
-
-  create() {
-    this.add.image(400, 300, 'sky');
-
-    var particles = this.add.particles('red');
-
-    var emitter = particles.createEmitter({
-        speed: 100,
-        scale: { start: 1, end: 0 },
-        blendMode: 'ADD'
-    });
-
-    var logo = this.physics.add.image(400, 100, 'logo');
-
-    logo.setVelocity(100, 200);
-    logo.setBounce(1, 1);
-    logo.setCollideWorldBounds(true);
-
-    emitter.startFollow(logo);
-  }
-}
-
-const config = {
-  type: WEBGL,
-  width: window.innerWidth,
-  height: window.innerHeight,
-  canvas,
+const gameConfig: Types.Core.GameConfig = {
+	title: 'Phaser game tutorial',
+  type: Phaser.WEBGL,
+  parent: 'game',
+  backgroundColor: '#351f1b',
+  scale: {
+    mode: Phaser.Scale.ScaleModes.NONE,
+    width: window.innerWidth,
+    height: window.innerHeight,
+  },
   physics: {
     default: 'arcade',
     arcade: {
-      gravity: { y: 0 },
-      // debug: true
-    }
+      debug: false,
+    },
   },
-  scene: [
-    GameScene
-  ]
-}
+  render: {
+    antialiasGL: false,
+    pixelArt: true,
+  },
+  callbacks: {
+    postBoot: () => {
+      window.sizeChanged();
+    },
+  },
+  canvasStyle: `display: block; width: 100%; height: 100%;`,
+  autoFocus: true,
+  audio: {
+    disableWebAudio: false,
+  },
+  scene: [LoadingScene],
+};
 
-new Game(config);
+window.sizeChanged = () => {
+  if (window.game.isBooted) {
+    setTimeout(() => {
+      window.game.scale.resize(window.innerWidth, window.innerHeight);
+      window.game.canvas.setAttribute(
+        'style',
+        `display: block; width: ${window.innerWidth}px; height: ${window.innerHeight}px;`,
+      );
+    }, 100);
+  }
+};
+window.onresize = () => window.sizeChanged();
+
+window.game = new Game(gameConfig);
